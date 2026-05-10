@@ -44,6 +44,11 @@ frontend/.env.*
 logs/
 *.log
 
+# H2 embedded database files (default no-Docker mode)
+**/data/*.mv.db
+**/data/*.trace.db
+**/data/*.lock.db
+
 # Env / secrets
 .env
 .env.local

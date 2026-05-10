@@ -1,4 +1,5 @@
 # Installs everything needed to run the Hospital Management System without Docker.
+# Default mode uses H2 + no broker, so Postgres and RabbitMQ are NOT needed.
 # Run from a normal PowerShell — winget will prompt for elevation per package.
 #
 # Idempotent: re-running will skip packages that are already installed.
@@ -6,12 +7,10 @@
 $ErrorActionPreference = 'Stop'
 
 $packages = @(
-    @{ Id = 'Git.Git';                          Name = 'Git'              },
-    @{ Id = 'Microsoft.OpenJDK.21';             Name = 'JDK 21'           },
-    @{ Id = 'Apache.Maven';                     Name = 'Maven'            },
-    @{ Id = 'PostgreSQL.PostgreSQL.16';         Name = 'PostgreSQL 16'    },
-    @{ Id = 'RabbitMQ.Server';                  Name = 'RabbitMQ Server'  },
-    @{ Id = 'OpenJS.NodeJS.LTS';                Name = 'Node.js LTS'      }
+    @{ Id = 'Git.Git';                Name = 'Git'         },
+    @{ Id = 'Microsoft.OpenJDK.21';   Name = 'JDK 21'      },
+    @{ Id = 'Apache.Maven';           Name = 'Maven'       },
+    @{ Id = 'OpenJS.NodeJS.LTS';      Name = 'Node.js LTS' }
 )
 
 function Test-WingetInstalled {
@@ -21,6 +20,7 @@ function Test-WingetInstalled {
 }
 
 Write-Host '== HMS prerequisites installer ==' -ForegroundColor Cyan
+Write-Host '(Default mode: H2 + no broker. No Postgres / RabbitMQ install required.)' -ForegroundColor DarkGray
 Write-Host ''
 
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
@@ -48,12 +48,9 @@ Write-Host '== All packages processed ==' -ForegroundColor Cyan
 Write-Host ''
 Write-Host 'Next steps:' -ForegroundColor Yellow
 Write-Host '  1. CLOSE this terminal and open a fresh PowerShell so PATH picks up the new tools.'
-Write-Host '  2. Verify:  java -version ; mvn -v ; psql --version ; node --version'
-Write-Host '  3. The PostgreSQL installer asked for a password during install — REMEMBER IT.'
-Write-Host '     You will paste it into .env (POSTGRES_PASSWORD) and use it when running'
-Write-Host '     scripts\init-databases.ps1.'
+Write-Host '  2. Verify:  java -version ; mvn -v ; node --version'
+Write-Host '  3. Start backend:  .\scripts\start-backend.ps1'
+Write-Host '  4. Start frontend: cd frontend ; npm install ; npm run dev'
 Write-Host ''
-Write-Host '  4. Then continue with: copy .env.example .env  (and edit POSTGRES_PASSWORD)'
-Write-Host '                          .\scripts\init-databases.ps1'
-Write-Host '                          .\scripts\start-backend.ps1'
+Write-Host 'Default admin login: admin@gmail.com / admin@123 (baked-in for local dev).'
 Write-Host ''

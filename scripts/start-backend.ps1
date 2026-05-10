@@ -1,31 +1,29 @@
 # Starts all 8 backend services in their own PowerShell windows.
-# Reads .env from the project root and passes its values as environment variables to each service.
+# Default mode runs with H2 file-based DB and no broker — no .env needed.
+# If .env exists, its values are loaded (useful for overriding defaults).
 # PIDs are saved to scripts\.running-pids.txt for stop-backend.ps1.
 
 $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path "$PSScriptRoot\..").Path
 $envFile = Join-Path $root '.env'
-if (-not (Test-Path $envFile)) {
-    Write-Error ".env not found at $envFile. Copy .env.example to .env and edit it first."
-    exit 1
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith('#')) { return }
+        $eq = $line.IndexOf('=')
+        if ($eq -lt 0) { return }
+        $key = $line.Substring(0, $eq).Trim()
+        $val = $line.Substring($eq + 1).Trim()
+        [Environment]::SetEnvironmentVariable($key, $val, 'Process')
+    }
+    Write-Host "Loaded .env overrides from $envFile" -ForegroundColor DarkGray
+} else {
+    Write-Host "No .env file found — using H2 + no-broker defaults baked into application.yml." -ForegroundColor DarkGray
 }
 
-# Load .env into the current process so child processes inherit
-Get-Content $envFile | ForEach-Object {
-    $line = $_.Trim()
-    if (-not $line -or $line.StartsWith('#')) { return }
-    $eq = $line.IndexOf('=')
-    if ($eq -lt 0) { return }
-    $key = $line.Substring(0, $eq).Trim()
-    $val = $line.Substring($eq + 1).Trim()
-    [Environment]::SetEnvironmentVariable($key, $val, 'Process')
-}
-
-# Override Postgres / RabbitMQ / Eureka host to localhost — the Docker-compose values use container names
-$env:POSTGRES_HOST = 'localhost'
-$env:RABBITMQ_HOST = 'localhost'
-$env:EUREKA_HOST   = 'localhost'
+# Make sure we're not pointing at Docker container names locally
+$env:EUREKA_HOST = 'localhost'
 
 $services = @(
     @{ Name = 'eureka-server';        Color = 'Cyan'    },

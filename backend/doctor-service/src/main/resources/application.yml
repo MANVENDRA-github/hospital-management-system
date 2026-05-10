@@ -5,16 +5,16 @@ spring:
   application:
     name: doctor-service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/doctor_db
-    username: ${POSTGRES_USER:hms}
-    password: ${POSTGRES_PASSWORD:hms_pw}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:file:./data/doctor_db;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ''
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
     show-sql: false
 
 eureka:
@@ -26,7 +26,7 @@ eureka:
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:Y2hhbmdlLW1lLWxvY2FsLWRldi1zZWNyZXQtaG9zcGl0YWwtbWFuYWdlbWVudC1zeXN0ZW0tMjAyNg==}
 
 springdoc:
   swagger-ui:
@@ -42,3 +42,18 @@ logging:
   level:
     root: INFO
     com.hospital: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/doctor_db
+    username: ${POSTGRES_USER:hms}
+    password: ${POSTGRES_PASSWORD:hms_pw}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
