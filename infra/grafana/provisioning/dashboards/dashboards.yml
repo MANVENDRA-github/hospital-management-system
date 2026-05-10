@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: HMS
+    orgId: 1
+    folder: HMS
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
