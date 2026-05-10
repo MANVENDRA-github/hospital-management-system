@@ -1,0 +1,78 @@
+# Starts all 8 backend services in their own PowerShell windows.
+# Reads .env from the project root and passes its values as environment variables to each service.
+# PIDs are saved to scripts\.running-pids.txt for stop-backend.ps1.
+
+$ErrorActionPreference = 'Stop'
+
+$root = (Resolve-Path "$PSScriptRoot\..").Path
+$envFile = Join-Path $root '.env'
+if (-not (Test-Path $envFile)) {
+    Write-Error ".env not found at $envFile. Copy .env.example to .env and edit it first."
+    exit 1
+}
+
+# Load .env into the current process so child processes inherit
+Get-Content $envFile | ForEach-Object {
+    $line = $_.Trim()
+    if (-not $line -or $line.StartsWith('#')) { return }
+    $eq = $line.IndexOf('=')
+    if ($eq -lt 0) { return }
+    $key = $line.Substring(0, $eq).Trim()
+    $val = $line.Substring($eq + 1).Trim()
+    [Environment]::SetEnvironmentVariable($key, $val, 'Process')
+}
+
+# Override Postgres / RabbitMQ / Eureka host to localhost — the Docker-compose values use container names
+$env:POSTGRES_HOST = 'localhost'
+$env:RABBITMQ_HOST = 'localhost'
+$env:EUREKA_HOST   = 'localhost'
+
+$services = @(
+    @{ Name = 'eureka-server';        Color = 'Cyan'    },
+    @{ Name = 'api-gateway';          Color = 'Magenta' },
+    @{ Name = 'auth-service';         Color = 'Yellow'  },
+    @{ Name = 'patient-service';      Color = 'Green'   },
+    @{ Name = 'doctor-service';       Color = 'Green'   },
+    @{ Name = 'appointment-service';  Color = 'Blue'    },
+    @{ Name = 'billing-service';      Color = 'Blue'    },
+    @{ Name = 'laboratory-service';   Color = 'Blue'    }
+)
+
+$backendDir = Join-Path $root 'backend'
+$pidFile = Join-Path $PSScriptRoot '.running-pids.txt'
+if (Test-Path $pidFile) { Remove-Item $pidFile -Force }
+
+Write-Host '== Starting HMS backend services ==' -ForegroundColor Cyan
+Write-Host "Project root: $root"
+Write-Host "Backend dir:  $backendDir"
+Write-Host ''
+
+$first = $true
+foreach ($svc in $services) {
+    $name = $svc.Name
+    $title = "HMS - $name"
+    $cmd = "Set-Location '$backendDir'; `$Host.UI.RawUI.WindowTitle = '$title'; Write-Host 'Starting $name...' -ForegroundColor $($svc.Color); mvn -pl $name spring-boot:run"
+
+    $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoExit', '-Command', $cmd -PassThru -WindowStyle Normal
+    Add-Content -Path $pidFile -Value $proc.Id
+    Write-Host ("  Started {0,-22} (PID {1})" -f $name, $proc.Id) -ForegroundColor $svc.Color
+
+    if ($first) {
+        Write-Host '    Eureka takes ~15s to register itself; waiting before starting the rest...' -ForegroundColor DarkGray
+        Start-Sleep -Seconds 15
+        $first = $false
+    } else {
+        Start-Sleep -Seconds 2
+    }
+}
+
+Write-Host ''
+Write-Host '== All services started ==' -ForegroundColor Cyan
+Write-Host ''
+Write-Host 'Wait ~60s for everything to register with Eureka, then visit:'
+Write-Host '  Eureka:   http://localhost:8761'
+Write-Host '  Gateway:  http://localhost:8080'
+Write-Host '  Frontend: http://localhost:5173  (run separately: cd frontend; npm install; npm run dev)'
+Write-Host ''
+Write-Host "PIDs written to: $pidFile"
+Write-Host 'When you are done, run: .\scripts\stop-backend.ps1'
