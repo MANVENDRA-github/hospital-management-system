@@ -1,0 +1,74 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        - id: auth-service-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/v3/api-docs
+          filters:
+            - RewritePath=/auth/v3/api-docs,/v3/api-docs
+        - id: patient-service
+          uri: lb://patient-service
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - AuthenticationFilter
+        - id: doctor-service
+          uri: lb://doctor-service
+          predicates:
+            - Path=/api/doctors/**
+          filters:
+            - AuthenticationFilter
+        - id: appointment-service
+          uri: lb://appointment-service
+          predicates:
+            - Path=/api/appointments/**
+          filters:
+            - AuthenticationFilter
+        - id: billing-service
+          uri: lb://billing-service
+          predicates:
+            - Path=/api/billing/**
+          filters:
+            - AuthenticationFilter
+        - id: laboratory-service
+          uri: lb://laboratory-service
+          predicates:
+            - Path=/api/lab/**
+          filters:
+            - AuthenticationFilter
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+  instance:
+    prefer-ip-address: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    com.hospital: DEBUG
