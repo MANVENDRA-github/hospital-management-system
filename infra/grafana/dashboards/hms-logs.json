@@ -1,0 +1,45 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "type": "logs",
+      "title": "All HMS service logs",
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": true
+      },
+      "targets": [
+        { "expr": "{project=\"hms\"} | json", "refId": "A" }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Auth service",
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        { "expr": "{service=\"auth-service\"} | json", "refId": "A" }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "API Gateway",
+      "datasource": { "type": "loki", "uid": "Loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        { "expr": "{service=\"api-gateway\"} | json", "refId": "A" }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["hms"],
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "HMS — Service logs",
+  "uid": "hms-logs",
+  "version": 1
+}
