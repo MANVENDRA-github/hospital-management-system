@@ -1,0 +1,177 @@
+{
+  "info": {
+    "name": "Hospital Management System",
+    "description": "Full HMS API surface, organized by service. All requests go through the API Gateway. Use the 'Auth: Login' request first; the token is auto-saved into the `bearerToken` collection variable for subsequent requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "hms-collection-v1"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{bearerToken}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "bearerToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"new.user@example.com\",\n  \"password\": \"secret123\",\n  \"role\": \"PATIENT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (auto-saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('bearerToken', data.token);",
+                  "  pm.test('Token saved', () => pm.expect(data.token).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"admin@123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Create patient",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/patients", "host": ["{{baseUrl}}"], "path": ["api", "patients"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"gender\": \"F\",\n  \"phone\": \"555-1212\",\n  \"address\": \"42 Wallaby Way\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update patient",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/patients/1", "host": ["{{baseUrl}}"], "path": ["api", "patients", "1"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"phone\": \"555-9999\"\n}" }
+          }
+        },
+        { "name": "Delete patient", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/patients/1", "host": ["{{baseUrl}}"], "path": ["api", "patients", "1"] } } },
+        { "name": "Get patient by id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/patients/1", "host": ["{{baseUrl}}"], "path": ["api", "patients", "1"] } } },
+        { "name": "List patients", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/patients", "host": ["{{baseUrl}}"], "path": ["api", "patients"] } } }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "Create doctor",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/doctors", "host": ["{{baseUrl}}"], "path": ["api", "doctors"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Dr. Greg House\",\n  \"specialization\": \"Diagnostics\",\n  \"phone\": \"555-3333\",\n  \"email\": \"house@hms.local\"\n}" }
+          }
+        },
+        { "name": "Update doctor", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/doctors/1", "host": ["{{baseUrl}}"], "path": ["api", "doctors", "1"] }, "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Dr. Greg House\",\n  \"specialization\": \"Nephrology\"\n}" } } },
+        { "name": "Delete doctor", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/doctors/1", "host": ["{{baseUrl}}"], "path": ["api", "doctors", "1"] } } },
+        { "name": "Get doctor by id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/doctors/1", "host": ["{{baseUrl}}"], "path": ["api", "doctors", "1"] } } },
+        { "name": "List doctors", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/doctors", "host": ["{{baseUrl}}"], "path": ["api", "doctors"] } } },
+        { "name": "Find by specialization", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/doctors/specialization/Diagnostics", "host": ["{{baseUrl}}"], "path": ["api", "doctors", "specialization", "Diagnostics"] } } }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Book appointment",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/appointments", "host": ["{{baseUrl}}"], "path": ["api", "appointments"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"appointmentDate\": \"2026-06-15T10:30:00\",\n  \"reason\": \"Annual checkup\"\n}" }
+          }
+        },
+        { "name": "Cancel appointment", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/appointments/1/cancel", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "1", "cancel"] } } },
+        { "name": "Complete appointment (triggers RabbitMQ event → auto-bill)", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/appointments/1/complete", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "1", "complete"] } } },
+        { "name": "Get appointment by id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/appointments/1", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "1"] } } },
+        { "name": "List all appointments", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/appointments", "host": ["{{baseUrl}}"], "path": ["api", "appointments"] } } },
+        { "name": "By patient", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/appointments/patient/1", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "patient", "1"] } } },
+        { "name": "By doctor", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/appointments/doctor/1", "host": ["{{baseUrl}}"], "path": ["api", "appointments", "doctor", "1"] } } }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Create bill",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/billing", "host": ["{{baseUrl}}"], "path": ["api", "billing"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"patientId\": 1,\n  \"appointmentId\": 1,\n  \"amount\": 750.00,\n  \"description\": \"Manual bill\"\n}" }
+          }
+        },
+        { "name": "Get bill by id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/billing/1", "host": ["{{baseUrl}}"], "path": ["api", "billing", "1"] } } },
+        { "name": "Mark bill paid", "request": { "method": "PUT", "url": { "raw": "{{baseUrl}}/api/billing/1/pay", "host": ["{{baseUrl}}"], "path": ["api", "billing", "1", "pay"] } } },
+        { "name": "Bills by patient", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/billing/patient/1", "host": ["{{baseUrl}}"], "path": ["api", "billing", "patient", "1"] } } }
+      ]
+    },
+    {
+      "name": "Lab",
+      "item": [
+        {
+          "name": "Book lab test",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/lab", "host": ["{{baseUrl}}"], "path": ["api", "lab"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"patientId\": 1,\n  \"doctorId\": 1,\n  \"testName\": \"Complete Blood Count\",\n  \"testDate\": \"2026-06-20T09:00:00\"\n}" }
+          }
+        },
+        {
+          "name": "Upload lab result",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/lab/1/result", "host": ["{{baseUrl}}"], "path": ["api", "lab", "1", "result"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"result\": \"All values within normal range\"\n}" }
+          }
+        },
+        { "name": "Get lab test by id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/lab/1", "host": ["{{baseUrl}}"], "path": ["api", "lab", "1"] } } },
+        { "name": "Lab tests by patient", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/lab/patient/1", "host": ["{{baseUrl}}"], "path": ["api", "lab", "patient", "1"] } } },
+        { "name": "List all lab tests", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/lab", "host": ["{{baseUrl}}"], "path": ["api", "lab"] } } }
+      ]
+    }
+  ]
+}
