@@ -60,7 +60,7 @@ eureka:
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:Y2hhbmdlLW1lLWxvY2FsLWRldi1zZWNyZXQtaG9zcGl0YWwtbWFuYWdlbWVudC1zeXN0ZW0tMjAyNg==}
 
 management:
   endpoints:
