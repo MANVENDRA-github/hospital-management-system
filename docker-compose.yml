@@ -1,0 +1,294 @@
+name: hms
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hms-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hms-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: hms-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hms-net
+
+  eureka-server:
+    build:
+      context: ./backend
+      dockerfile: eureka-server/Dockerfile
+    container_name: hms-eureka
+    environment:
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - hms-net
+
+  api-gateway:
+    build:
+      context: ./backend
+      dockerfile: api-gateway/Dockerfile
+    container_name: hms-gateway
+    environment:
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks:
+      - hms-net
+
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    container_name: hms-auth
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8081:8081"
+    networks:
+      - hms-net
+
+  patient-service:
+    build:
+      context: ./backend
+      dockerfile: patient-service/Dockerfile
+    container_name: hms-patient
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8082:8082"
+    networks:
+      - hms-net
+
+  doctor-service:
+    build:
+      context: ./backend
+      dockerfile: doctor-service/Dockerfile
+    container_name: hms-doctor
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8083:8083"
+    networks:
+      - hms-net
+
+  appointment-service:
+    build:
+      context: ./backend
+      dockerfile: appointment-service/Dockerfile
+    container_name: hms-appointment
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8084:8084"
+    networks:
+      - hms-net
+
+  billing-service:
+    build:
+      context: ./backend
+      dockerfile: billing-service/Dockerfile
+    container_name: hms-billing
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8085:8085"
+    networks:
+      - hms-net
+
+  laboratory-service:
+    build:
+      context: ./backend
+      dockerfile: laboratory-service/Dockerfile
+    container_name: hms-lab
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EUREKA_HOST: eureka-server
+      EUREKA_PORT: "8761"
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    ports:
+      - "8086:8086"
+    networks:
+      - hms-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hms-frontend
+    depends_on:
+      api-gateway:
+        condition: service_started
+    ports:
+      - "5173:5173"
+    networks:
+      - hms-net
+
+  sonarqube-db:
+    image: postgres:16-alpine
+    container_name: hms-sonarqube-db
+    profiles: [quality]
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - sonarqube-db-data:/var/lib/postgresql/data
+    networks:
+      - hms-net
+
+  sonarqube:
+    image: sonarqube:10.6-community
+    container_name: hms-sonarqube
+    profiles: [quality]
+    depends_on:
+      - sonarqube-db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
+    ports:
+      - "9000:9000"
+    networks:
+      - hms-net
+
+volumes:
+  postgres-data:
+  sonarqube-db-data:
+  sonarqube-data:
+  sonarqube-extensions:
+  sonarqube-logs:
+
+networks:
+  hms-net:
+    driver: bridge
