@@ -1,0 +1,61 @@
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+nbproject/private/
+.nb-gradle/
+.DS_Store
+
+# Spring Boot
+spring-boot-*.log
+application-local.yml
+application-local.properties
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+frontend/*.local
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Logs
+logs/
+*.log
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Coverage / Sonar
+**/jacoco.exec
+**/site/jacoco/
+.scannerwork/
+.sonar/
