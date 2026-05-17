@@ -64,3 +64,6 @@ desktop.ini
 **/site/jacoco/
 .scannerwork/
 .sonar/
+
+# Local Claude Code settings (per-developer permission allowlist)
+.claude/
