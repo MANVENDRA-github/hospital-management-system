@@ -54,65 +54,92 @@ export default function BillingPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-slate-900">Billing</h1>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="page-title">Billing</h1>
+          <p className="page-sub">Create bills, view a patient's invoices, and mark them paid.</p>
+        </div>
+        {list.length > 0 && <span className="badge-slate">{list.length} {list.length === 1 ? 'bill' : 'bills'}</span>}
+      </div>
 
-      <form onSubmit={onLoad} className="mb-4 flex gap-2">
-        <input className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm" type="number" placeholder="Patient ID" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
-        <button className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100">Load bills</button>
+      <form onSubmit={onLoad} className="card card-pad mb-6 flex flex-wrap gap-3 !p-4">
+        <input className="input flex-1 min-w-[200px]" type="number" placeholder="Enter patient ID to load bills" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
+        <button className="btn-secondary shrink-0">Load bills</button>
       </form>
 
       {canCreate && (
-        <form onSubmit={onCreate} className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2">
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="number" placeholder="Patient ID *" required value={draft.patientId || ''} onChange={(e) => setDraft({ ...draft, patientId: Number(e.target.value) })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="number" placeholder="Appointment ID (optional)" value={draft.appointmentId ?? ''} onChange={(e) => setDraft({ ...draft, appointmentId: e.target.value ? Number(e.target.value) : null })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Amount *" required value={draft.amount || ''} onChange={(e) => setDraft({ ...draft, amount: Number(e.target.value) })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Description" value={draft.description ?? ''} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
-          <div className="sm:col-span-2">
-            <button type="submit" className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Create bill</button>
-          </div>
-        </form>
+        <div className="card card-pad mb-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Create a new bill</h2>
+          <form onSubmit={onCreate} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="label">Patient ID *</span>
+              <input className="input" type="number" required value={draft.patientId || ''} onChange={(e) => setDraft({ ...draft, patientId: Number(e.target.value) })} />
+            </label>
+            <label className="block">
+              <span className="label">Appointment ID</span>
+              <input className="input" type="number" placeholder="Optional" value={draft.appointmentId ?? ''} onChange={(e) => setDraft({ ...draft, appointmentId: e.target.value ? Number(e.target.value) : null })} />
+            </label>
+            <label className="block">
+              <span className="label">Amount *</span>
+              <input className="input" type="number" step="0.01" required value={draft.amount || ''} onChange={(e) => setDraft({ ...draft, amount: Number(e.target.value) })} />
+            </label>
+            <label className="block">
+              <span className="label">Description</span>
+              <input className="input" value={draft.description ?? ''} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
+            </label>
+            <div className="sm:col-span-2">
+              <button type="submit" className="btn-primary">Create bill</button>
+            </div>
+          </form>
+        </div>
       )}
 
-      {error && <div className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+      {error && <div className="alert-error mb-4">{error}</div>}
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-2">ID</th>
-              <th className="px-4 py-2">Patient</th>
-              <th className="px-4 py-2">Appointment</th>
-              <th className="px-4 py-2">Amount</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Created</th>
-              <th className="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {list.map((b) => (
-              <tr key={b.id}>
-                <td className="px-4 py-2 text-slate-500">{b.id}</td>
-                <td className="px-4 py-2">{b.patientId}</td>
-                <td className="px-4 py-2">{b.appointmentId ?? '—'}</td>
-                <td className="px-4 py-2 font-medium">{b.amount}</td>
-                <td className="px-4 py-2">
-                  <span className={b.paymentStatus === 'PAID' ? 'rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800' : 'rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800'}>
-                    {b.paymentStatus}
-                  </span>
-                </td>
-                <td className="px-4 py-2 text-slate-500">{b.createdAt.replace('T', ' ').slice(0, 16)}</td>
-                <td className="px-4 py-2 text-right">
-                  {canPay && b.paymentStatus === 'PENDING' && (
-                    <button onClick={() => onPay(b.id)} className="text-emerald-700 hover:underline">Mark paid</button>
-                  )}
-                </td>
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="table-modern">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Patient</th>
+                <th>Appointment</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th className="text-right">Actions</th>
               </tr>
-            ))}
-            {list.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-500">Load bills by patient ID.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {list.map((b) => (
+                <tr key={b.id}>
+                  <td className="text-slate-400">#{b.id}</td>
+                  <td>#{b.patientId}</td>
+                  <td>{b.appointmentId ? `#${b.appointmentId}` : '—'}</td>
+                  <td className="font-medium text-slate-900">{b.amount}</td>
+                  <td>
+                    <span className={b.paymentStatus === 'PAID' ? 'badge-green' : 'badge-amber'}>
+                      {b.paymentStatus}
+                    </span>
+                  </td>
+                  <td className="text-slate-500">{b.createdAt.replace('T', ' ').slice(0, 16)}</td>
+                  <td className="text-right">
+                    {canPay && b.paymentStatus === 'PENDING' && (
+                      <button onClick={() => onPay(b.id)} className="text-sm font-medium text-emerald-700 hover:underline">Mark paid</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                    Enter a patient ID above to load their bills.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
