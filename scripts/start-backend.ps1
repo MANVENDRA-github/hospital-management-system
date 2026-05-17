@@ -1,5 +1,5 @@
 # Starts all 8 backend services in their own PowerShell windows.
-# Default mode runs with H2 file-based DB and no broker — no .env needed.
+# Default mode runs with H2 file-based DB and no broker - no .env needed.
 # If .env exists, its values are loaded (useful for overriding defaults).
 # PIDs are saved to scripts\.running-pids.txt for stop-backend.ps1.
 
@@ -19,11 +19,22 @@ if (Test-Path $envFile) {
     }
     Write-Host "Loaded .env overrides from $envFile" -ForegroundColor DarkGray
 } else {
-    Write-Host "No .env file found — using H2 + no-broker defaults baked into application.yml." -ForegroundColor DarkGray
+    Write-Host "No .env file found - using H2 + no-broker defaults baked into application.yml." -ForegroundColor DarkGray
 }
 
 # Make sure we're not pointing at Docker container names locally
 $env:EUREKA_HOST = 'localhost'
+
+# Resolve mvn and java in the PARENT shell so child windows don't depend on PATH inheritance.
+# (Conda profiles / -NoProfile combinations can strip Chocolatey's bin dir from child PATH.)
+$mvnCmd = Get-Command mvn -ErrorAction SilentlyContinue
+if (-not $mvnCmd) {
+    Write-Error "mvn not found on PATH in this shell. Run 'mvn -v' to confirm, then re-run this script."
+    exit 1
+}
+$mvnExe = $mvnCmd.Source
+$parentPath = $env:Path
+Write-Host "Using mvn: $mvnExe" -ForegroundColor DarkGray
 
 $services = @(
     @{ Name = 'eureka-server';        Color = 'Cyan'    },
@@ -49,9 +60,10 @@ $first = $true
 foreach ($svc in $services) {
     $name = $svc.Name
     $title = "HMS - $name"
-    $cmd = "Set-Location '$backendDir'; `$Host.UI.RawUI.WindowTitle = '$title'; Write-Host 'Starting $name...' -ForegroundColor $($svc.Color); mvn -pl $name spring-boot:run"
+    $escapedPath = $parentPath -replace "'", "''"
+    $cmd = "`$env:Path = '$escapedPath'; Set-Location '$backendDir'; `$Host.UI.RawUI.WindowTitle = '$title'; Write-Host 'Starting $name...' -ForegroundColor $($svc.Color); & '$mvnExe' -pl $name spring-boot:run"
 
-    $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoExit', '-Command', $cmd -PassThru -WindowStyle Normal
+    $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile', '-NoExit', '-Command', $cmd -PassThru -WindowStyle Normal
     Add-Content -Path $pidFile -Value $proc.Id
     Write-Host ("  Started {0,-22} (PID {1})" -f $name, $proc.Id) -ForegroundColor $svc.Color
 
