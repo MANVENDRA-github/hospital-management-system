@@ -6,7 +6,7 @@ $ErrorActionPreference = 'Continue'
 
 $pidFile = Join-Path $PSScriptRoot '.running-pids.txt'
 if (-not (Test-Path $pidFile)) {
-    Write-Host 'No PID file found at scripts\.running-pids.txt — nothing to stop.'
+    Write-Host 'No PID file found at scripts\.running-pids.txt - nothing to stop.'
     Write-Host 'If you have rogue java processes, you can run:'
     Write-Host '  Get-Process java | Stop-Process -Force'
     return
