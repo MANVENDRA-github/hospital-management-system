@@ -1,6 +1,6 @@
 # Installs everything needed to run the Hospital Management System without Docker.
 # Default mode uses H2 + no broker, so Postgres and RabbitMQ are NOT needed.
-# Run from a normal PowerShell — winget will prompt for elevation per package.
+# Run from a normal PowerShell - winget will prompt for elevation per package.
 #
 # Idempotent: re-running will skip packages that are already installed.
 
