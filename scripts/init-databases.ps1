@@ -13,7 +13,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Locate psql — winget installs Postgres to C:\Program Files\PostgreSQL\<ver>\bin
+# Locate psql - winget installs Postgres to C:\Program Files\PostgreSQL\<ver>\bin
 $psql = (Get-Command psql -ErrorAction SilentlyContinue)?.Path
 if (-not $psql) {
     $candidate = Get-ChildItem 'C:\Program Files\PostgreSQL' -Directory -ErrorAction SilentlyContinue |
