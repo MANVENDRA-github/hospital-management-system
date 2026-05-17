@@ -67,3 +67,10 @@ desktop.ini
 
 # Local Claude Code settings (per-developer permission allowlist)
 .claude/
+
+# Backend runtime artifact - PIDs of spawned start-backend.ps1 windows
+scripts/.running-pids.txt
+
+# Local helper scripts not meant for the repo
+scripts/.commit-loop.ps1
+scripts/.commit-no-docker.ps1
