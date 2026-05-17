@@ -69,69 +69,107 @@ export default function PatientsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-slate-900">Patients</h1>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="page-title">Patients</h1>
+          <p className="page-sub">Add, update, and review patient records.</p>
+        </div>
+        {canList && (
+          <span className="badge-slate">
+            {list.length} {list.length === 1 ? 'record' : 'records'}
+          </span>
+        )}
+      </div>
 
       {canCreate && (
-        <form onSubmit={onSubmit} className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-3">
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Name *" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="date" placeholder="DOB" value={draft.dateOfBirth ?? ''} onChange={(e) => setDraft({ ...draft, dateOfBirth: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Gender" value={draft.gender ?? ''} onChange={(e) => setDraft({ ...draft, gender: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Phone" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm sm:col-span-2" placeholder="Address" value={draft.address ?? ''} onChange={(e) => setDraft({ ...draft, address: e.target.value })} />
-          <div className="sm:col-span-3 flex gap-2">
-            <button type="submit" className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-              {editingId ? 'Update patient' : 'Create patient'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setDraft(EMPTY); }} className="rounded border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
-                Cancel
+        <div className="card card-pad mb-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
+            {editingId ? 'Update patient' : 'Add a new patient'}
+          </h2>
+          <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <label className="block">
+              <span className="label">Name *</span>
+              <input className="input" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Date of birth</span>
+              <input className="input" type="date" value={draft.dateOfBirth ?? ''} onChange={(e) => setDraft({ ...draft, dateOfBirth: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Gender</span>
+              <input className="input" placeholder="e.g. Male / Female" value={draft.gender ?? ''} onChange={(e) => setDraft({ ...draft, gender: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Phone</span>
+              <input className="input" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="label">Address</span>
+              <input className="input" value={draft.address ?? ''} onChange={(e) => setDraft({ ...draft, address: e.target.value })} />
+            </label>
+            <div className="flex gap-2 sm:col-span-3">
+              <button type="submit" className="btn-primary">
+                {editingId ? 'Update patient' : 'Create patient'}
               </button>
-            )}
-          </div>
-        </form>
+              {editingId && (
+                <button type="button" onClick={() => { setEditingId(null); setDraft(EMPTY); }} className="btn-secondary">
+                  Cancel
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       )}
 
-      {error && <div className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+      {error && <div className="alert-error mb-4">{error}</div>}
 
       {canList ? (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-2">ID</th>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">DOB</th>
-                <th className="px-4 py-2">Gender</th>
-                <th className="px-4 py-2">Phone</th>
-                <th className="px-4 py-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {list.map((p) => (
-                <tr key={p.id}>
-                  <td className="px-4 py-2 text-slate-500">{p.id}</td>
-                  <td className="px-4 py-2 font-medium text-slate-900">{p.name}</td>
-                  <td className="px-4 py-2">{p.dateOfBirth ?? '—'}</td>
-                  <td className="px-4 py-2">{p.gender ?? '—'}</td>
-                  <td className="px-4 py-2">{p.phone ?? '—'}</td>
-                  <td className="px-4 py-2 text-right">
-                    {canCreate && (
-                      <button onClick={() => onEdit(p)} className="mr-2 text-brand-700 hover:underline">Edit</button>
-                    )}
-                    {canDelete && (
-                      <button onClick={() => onDelete(p.id)} className="text-red-600 hover:underline">Delete</button>
-                    )}
-                  </td>
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="table-modern">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>DOB</th>
+                  <th>Gender</th>
+                  <th>Phone</th>
+                  <th className="text-right">Actions</th>
                 </tr>
-              ))}
-              {list.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">No patients yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {list.map((p) => (
+                  <tr key={p.id}>
+                    <td className="text-slate-400">#{p.id}</td>
+                    <td className="font-medium text-slate-900">{p.name}</td>
+                    <td>{p.dateOfBirth ?? '—'}</td>
+                    <td>{p.gender ?? '—'}</td>
+                    <td>{p.phone ?? '—'}</td>
+                    <td className="text-right">
+                      {canCreate && (
+                        <button onClick={() => onEdit(p)} className="mr-3 text-sm font-medium text-brand-700 hover:underline">Edit</button>
+                      )}
+                      {canDelete && (
+                        <button onClick={() => onDelete(p.id)} className="text-sm font-medium text-red-600 hover:underline">Delete</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {list.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">
+                      No patients yet. Use the form above to add one.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Listing patients requires ADMIN or DOCTOR role.</p>
+        <div className="card card-pad text-sm text-slate-500">
+          Listing patients requires the <span className="badge-brand">ADMIN</span> or <span className="badge-brand">DOCTOR</span> role.
+        </div>
       )}
     </div>
   );

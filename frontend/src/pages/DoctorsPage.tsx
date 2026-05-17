@@ -54,66 +54,100 @@ export default function DoctorsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-slate-900">Doctors</h1>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="page-title">Doctors</h1>
+          <p className="page-sub">Browse the directory and manage doctor profiles.</p>
+        </div>
+        <span className="badge-slate">{list.length} {list.length === 1 ? 'doctor' : 'doctors'}</span>
+      </div>
 
-      <form onSubmit={onSearch} className="mb-4 flex gap-2">
-        <input className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Filter by specialization (e.g. cardiology)" value={specQuery} onChange={(e) => setSpecQuery(e.target.value)} />
-        <button className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100">Search</button>
-        <button type="button" onClick={() => { setSpecQuery(''); reload(); }} className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100">Reset</button>
+      <form onSubmit={onSearch} className="card card-pad mb-6 flex flex-wrap gap-3">
+        <input className="input flex-1 min-w-[200px]" placeholder="Filter by specialization (e.g. cardiology)" value={specQuery} onChange={(e) => setSpecQuery(e.target.value)} />
+        <button className="btn-secondary">Search</button>
+        <button type="button" onClick={() => { setSpecQuery(''); reload(); }} className="btn-ghost">Reset</button>
       </form>
 
       {canCreate && (
-        <form onSubmit={onSubmit} className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2">
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Name *" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Specialization *" required value={draft.specialization} onChange={(e) => setDraft({ ...draft, specialization: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Phone" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="email" placeholder="Email" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
-          <div className="sm:col-span-2 flex gap-2">
-            <button type="submit" className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-              {editingId ? 'Update doctor' : 'Create doctor'}
-            </button>
-            {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setDraft(EMPTY); }} className="rounded border border-slate-300 px-4 py-2 text-sm hover:bg-slate-100">
-                Cancel
+        <div className="card card-pad mb-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
+            {editingId ? 'Update doctor' : 'Add a new doctor'}
+          </h2>
+          <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="label">Name *</span>
+              <input className="input" required value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Specialization *</span>
+              <input className="input" required value={draft.specialization} onChange={(e) => setDraft({ ...draft, specialization: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Phone</span>
+              <input className="input" value={draft.phone ?? ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Email</span>
+              <input className="input" type="email" value={draft.email ?? ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} />
+            </label>
+            <div className="flex gap-2 sm:col-span-2">
+              <button type="submit" className="btn-primary">
+                {editingId ? 'Update doctor' : 'Create doctor'}
               </button>
-            )}
-          </div>
-        </form>
+              {editingId && (
+                <button type="button" onClick={() => { setEditingId(null); setDraft(EMPTY); }} className="btn-secondary">
+                  Cancel
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       )}
 
-      {error && <div className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+      {error && <div className="alert-error mb-4">{error}</div>}
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-2">ID</th>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Specialization</th>
-              <th className="px-4 py-2">Phone</th>
-              <th className="px-4 py-2">Email</th>
-              <th className="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {list.map((d) => (
-              <tr key={d.id}>
-                <td className="px-4 py-2 text-slate-500">{d.id}</td>
-                <td className="px-4 py-2 font-medium">{d.name}</td>
-                <td className="px-4 py-2">{d.specialization}</td>
-                <td className="px-4 py-2">{d.phone ?? '—'}</td>
-                <td className="px-4 py-2">{d.email ?? '—'}</td>
-                <td className="px-4 py-2 text-right">
-                  {canEdit && <button onClick={() => onEdit(d)} className="mr-2 text-brand-700 hover:underline">Edit</button>}
-                  {canDelete && <button onClick={async () => { try { await doctorsApi.remove(d.id); reload(); } catch (e) { setError(extractError(e)); } }} className="text-red-600 hover:underline">Delete</button>}
-                </td>
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="table-modern">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Specialization</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th className="text-right">Actions</th>
               </tr>
-            ))}
-            {list.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-500">No doctors yet.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {list.map((d) => (
+                <tr key={d.id}>
+                  <td className="text-slate-400">#{d.id}</td>
+                  <td className="font-medium text-slate-900">{d.name}</td>
+                  <td><span className="badge-brand">{d.specialization}</span></td>
+                  <td>{d.phone ?? '—'}</td>
+                  <td>{d.email ?? '—'}</td>
+                  <td className="text-right">
+                    {canEdit && <button onClick={() => onEdit(d)} className="mr-3 text-sm font-medium text-brand-700 hover:underline">Edit</button>}
+                    {canDelete && (
+                      <button
+                        onClick={async () => { try { await doctorsApi.remove(d.id); reload(); } catch (e) { setError(extractError(e)); } }}
+                        className="text-sm font-medium text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">No doctors yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

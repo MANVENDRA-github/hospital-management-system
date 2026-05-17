@@ -69,57 +69,80 @@ export default function LabTestsPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-slate-900">Lab Tests</h1>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="page-title">Lab Tests</h1>
+          <p className="page-sub">Order tests, track status, and upload results.</p>
+        </div>
+        <span className="badge-slate">{list.length} {list.length === 1 ? 'test' : 'tests'}</span>
+      </div>
 
-      <form onSubmit={onLoadByPatient} className="mb-4 flex gap-2">
-        <input className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm" type="number" placeholder="Patient ID" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
-        <button className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100">Load</button>
+      <form onSubmit={onLoadByPatient} className="card card-pad mb-6 flex flex-wrap gap-3 !p-4">
+        <input className="input flex-1 min-w-[200px]" type="number" placeholder="Filter by patient ID" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
+        <button className="btn-secondary shrink-0">Load</button>
       </form>
 
       {canBook && (
-        <form onSubmit={onBook} className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2">
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="number" placeholder="Patient ID *" required value={draft.patientId || ''} onChange={(e) => setDraft({ ...draft, patientId: Number(e.target.value) })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="number" placeholder="Doctor ID *" required value={draft.doctorId || ''} onChange={(e) => setDraft({ ...draft, doctorId: Number(e.target.value) })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" placeholder="Test name *" required value={draft.testName} onChange={(e) => setDraft({ ...draft, testName: e.target.value })} />
-          <input className="rounded border border-slate-300 px-3 py-2 text-sm" type="datetime-local" required value={draft.testDate} onChange={(e) => setDraft({ ...draft, testDate: e.target.value })} />
-          <div className="sm:col-span-2">
-            <button type="submit" className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Book test</button>
-          </div>
-        </form>
+        <div className="card card-pad mb-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Order a new test</h2>
+          <form onSubmit={onBook} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="label">Patient ID *</span>
+              <input className="input" type="number" required value={draft.patientId || ''} onChange={(e) => setDraft({ ...draft, patientId: Number(e.target.value) })} />
+            </label>
+            <label className="block">
+              <span className="label">Doctor ID *</span>
+              <input className="input" type="number" required value={draft.doctorId || ''} onChange={(e) => setDraft({ ...draft, doctorId: Number(e.target.value) })} />
+            </label>
+            <label className="block">
+              <span className="label">Test name *</span>
+              <input className="input" required value={draft.testName} onChange={(e) => setDraft({ ...draft, testName: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="label">Test date *</span>
+              <input className="input" type="datetime-local" required value={draft.testDate} onChange={(e) => setDraft({ ...draft, testDate: e.target.value })} />
+            </label>
+            <div className="sm:col-span-2">
+              <button type="submit" className="btn-primary">Book test</button>
+            </div>
+          </form>
+        </div>
       )}
 
-      {error && <div className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+      {error && <div className="alert-error mb-4">{error}</div>}
 
       <div className="space-y-3">
         {list.map((t) => (
-          <div key={t.id} className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="flex items-start justify-between">
+          <div key={t.id} className="card card-pad">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="text-base font-semibold text-slate-900">{t.testName}</div>
-                <div className="text-sm text-slate-500">
-                  Patient #{t.patientId} • Doctor #{t.doctorId} • {t.testDate.replace('T', ' ').slice(0, 16)}
+                <div className="mt-1 text-sm text-slate-500">
+                  Patient #{t.patientId} &middot; Doctor #{t.doctorId} &middot; {t.testDate.replace('T', ' ').slice(0, 16)}
                 </div>
               </div>
-              <span className={t.status === 'COMPLETED' ? 'rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800' : 'rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800'}>
-                {t.status}
-              </span>
+              <span className={t.status === 'COMPLETED' ? 'badge-green' : 'badge-amber'}>{t.status}</span>
             </div>
-            {t.result && <p className="mt-2 rounded bg-slate-50 p-2 text-sm text-slate-700">Result: {t.result}</p>}
+            {t.result && (
+              <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-inset ring-slate-200">
+                <span className="font-medium text-slate-900">Result:</span> {t.result}
+              </div>
+            )}
             {canResult && t.status === 'PENDING' && (
               <div className="mt-3 flex gap-2">
                 <input
-                  className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm"
+                  className="input"
                   placeholder="Enter result"
                   value={resultDrafts[t.id] ?? ''}
                   onChange={(e) => setResultDrafts((d) => ({ ...d, [t.id]: e.target.value }))}
                 />
-                <button onClick={() => onUploadResult(t.id)} className="rounded bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700">Upload result</button>
+                <button onClick={() => onUploadResult(t.id)} className="btn-primary shrink-0">Upload result</button>
               </div>
             )}
           </div>
         ))}
         {list.length === 0 && (
-          <div className="rounded-lg border border-slate-200 bg-white px-4 py-6 text-center text-slate-500">No tests to show.</div>
+          <div className="card card-pad text-center text-sm text-slate-500">No tests to show.</div>
         )}
       </div>
     </div>
