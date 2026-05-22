@@ -23,18 +23,25 @@ public class DataInitializer {
     private String adminPassword;
 
     @Bean
-    public CommandLineRunner adminSeeder(UserRepository repo, PasswordEncoder encoder) {
+    public CommandLineRunner userSeeder(UserRepository repo, PasswordEncoder encoder) {
         return args -> {
-            if (repo.existsByEmail(adminEmail)) {
-                log.info("Admin user '{}' already present, skipping seed.", adminEmail);
-                return;
-            }
-            repo.save(User.builder()
-                    .email(adminEmail)
-                    .password(encoder.encode(adminPassword))
-                    .role(Role.ADMIN)
-                    .build());
-            log.info("Seeded default admin user '{}'.", adminEmail);
+            seedUser(repo, encoder, adminEmail, adminPassword, Role.ADMIN);
+            seedUser(repo, encoder, "doctor@gmail.com", "doctor@123", Role.DOCTOR);
+            seedUser(repo, encoder, "patient@gmail.com", "patient@123", Role.PATIENT);
         };
+    }
+
+    private void seedUser(UserRepository repo, PasswordEncoder encoder,
+                          String email, String password, Role role) {
+        if (repo.existsByEmail(email)) {
+            log.info("{} user '{}' already present, skipping seed.", role, email);
+            return;
+        }
+        repo.save(User.builder()
+                .email(email)
+                .password(encoder.encode(password))
+                .role(role)
+                .build());
+        log.info("Seeded default {} user '{}'.", role, email);
     }
 }
